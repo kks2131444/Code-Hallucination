@@ -3,7 +3,7 @@ import os
 from tqdm import tqdm
 
 # --------------------------
-# 1. 标签映射（与原始代码保持一致）
+# 1. 标签映射
 # --------------------------
 label2id = {
     "No Hallucination": 0,
@@ -24,7 +24,7 @@ label2id = {
     "7.2": 15,
 }
 
-# 标签名称到文件名的映射（空格替换为下划线，扩展名改为 .json）
+# 标签名称到文件名的映射
 label_to_filename = {
     label: f"{label.replace(' ', '_')}.json"   # 修改为 .json
     for label in label2id.keys()
@@ -74,7 +74,7 @@ def load_dataset(file_path):
 
 
 # --------------------------
-# 3. 按hallucination字段分类并保存（输出JSON数组，每个样本index从0开始）
+# 3. 按hallucination字段分类并保存
 # --------------------------
 def classify_and_save(samples, output_dir):
     """按样本的hallucination标签分类，每个文件输出为一个JSON数组，样本index从0开始重新编号"""
@@ -142,7 +142,7 @@ def classify_and_save(samples, output_dir):
 # 4. 主执行流程
 # --------------------------
 if __name__ == "__main__":
-    # 数据集路径（去重后的文件）
+    # 数据集路径
     dataset_path = ""
     # 输出目录
     output_dir = ""
