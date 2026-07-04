@@ -1,0 +1,57 @@
+import json
+import os
+
+def filter_label_1(input_files, output_path):
+    """筛选多个文件中所有label=1的样本并合并保存"""
+    label1_samples = []  # 存储所有label=1的样本
+    total = 0  # 总样本数统计
+
+    for file in input_files:
+        if not os.path.exists(file):
+            print(f"⚠️ 文件不存在，已跳过：{file}")
+            continue
+
+        try:
+            # 读取文件内容
+            with open(file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            # 解析样本列表（兼容JSON列表或字典值为样本的格式）
+            samples = data if isinstance(data, list) else list(data.values())
+            total += len(samples)
+
+            # 筛选label=1的样本
+            for sample in samples:
+                # 严格检查是否存在label字段且值为1
+                if 'label' in sample and sample['label'] == 1:
+                    label1_samples.append(sample)
+
+            print(f"✅ 处理完成：{file}（样本数：{len(samples)}）")
+
+        except Exception as e:
+            print(f"❌ 处理{file}出错：{str(e)}，已跳过")
+            continue
+
+    # 保存结果
+    if not output_path.endswith('.json'):
+        output_path += '.json'  # 确保输出为JSON格式
+
+    with open(output_path, 'w', encoding='utf-8') as f:
+        json.dump(label1_samples, f, ensure_ascii=False, indent=2)
+
+    # 打印统计结果
+    print("\n====== 筛选结果 ======")
+    print(f"总处理样本数：{total}")
+    print(f"筛选出label=1的样本数：{len(label1_samples)}")
+    print(f"结果保存至：{output_path}")
+
+
+if __name__ == "__main__":
+    input_files = [
+        ""
+    ]
+    # 输出文件路径
+    output_path = ""
+
+    # 执行筛选
+    filter_label_1(input_files, output_path)
