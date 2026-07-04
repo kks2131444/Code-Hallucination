@@ -27,7 +27,7 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# ===================== 标签定义（与文档4一致，并修复id2label重复赋值） =====================
+# ===================== 标签定义 =====================
 label2id = {
     "No Hallucination": 0,
     "1.1": 1,
@@ -86,7 +86,7 @@ full_label_names = {
     15: "7.2 Non-Code Content (NCC)",
 }
 
-# ===================== 文档4的自定义模型 =====================
+# ===================== 自定义模型 =====================
 class MultiLabelClassificationModel(nn.Module):
     def __init__(self, model_name, num_labels):
         super().__init__()
@@ -179,7 +179,6 @@ class CodeHallucinationDataset(Dataset):
         print(f"✅ {split}样本数：{len(self.samples)} | 原始样本数：{len(self.raw_samples)}")
 
     def _process_sample(self, sample, line_id, all_samples, data_path):
-        # 兼容 'generation_code' 和 'src' 两种字段名
         code_field = None
         if 'src' in sample:
             code_field = 'src'
@@ -209,7 +208,7 @@ class CodeHallucinationDataset(Dataset):
                 multi_hot[label] = 1
             all_samples.append((input_text, multi_hot))
 
-            # 保存原始样本（含增强字段）
+            # 保存原始样本
             enhanced_fields = {}
             for key in ["canonical_solution", "flaw_line", "flaw_line_index", "labeling_comments", "bm25_similarity_score"]:
                 if key in sample:
@@ -259,7 +258,7 @@ class CodeHallucinationDataset(Dataset):
 
 # ===================== 评估与阈值计算函数 =====================
 def calculate_adaptive_thresholds(model, val_dataset):
-    """计算每个类别的自适应阈值（基于验证集预测概率的均值）"""
+    """计算每个类别的自适应阈值"""
     model.eval()
     probs_all = []
     for i in range(len(val_dataset)):
@@ -295,7 +294,7 @@ def compute_metrics(eval_pred):
 
 
 def predict_and_evaluate_with_adaptive_thresholds(model, full_dataset, adaptive_thresholds):
-    """在完整数据集上评估模型（使用自适应阈值）"""
+    """在完整数据集上评估模型"""
     model.eval()
     probs_all = []
     labels_all = []
@@ -428,13 +427,13 @@ def main():
         seed=config["seed"]
     )
 
-    # 3. 初始化自定义模型（与文档4完全一致）
+    # 3. 初始化自定义模型
     model = MultiLabelClassificationModel(
         model_name=config["base_model_path"],
         num_labels=len(label2id)
     ).to(device)
 
-    # 4. 配置训练参数（添加seed）
+    # 4. 配置训练参数
     training_args = TrainingArguments(
         output_dir=config["output_dir"],
         eval_strategy="steps",
@@ -475,7 +474,7 @@ def main():
     with open(threshold_path, 'w', encoding='utf-8') as f:
         json.dump(adaptive_thresholds, f, ensure_ascii=False, indent=2)
 
-    # 6. 在验证集+训练集上评估（可选）
+    # 6. 在验证集+训练集上评估
     full_dataset = ConcatDataset([train_dataset, val_dataset])
     predict_and_evaluate_with_adaptive_thresholds(model, full_dataset, adaptive_thresholds)
 
