@@ -15,7 +15,7 @@ from rank_bm25 import BM25Okapi
 # ===================== 全局配置 =====================
 device = torch.device("cpu")
 
-# ===================== 数据集（用于加载修复案例） =====================
+# ===================== 数据集 =====================
 class LLMRepairTool:
     def __init__(self, llm_config, sample_raw_samples, max_rounds=10):
         self.api_key = llm_config["api_key"]
@@ -141,7 +141,7 @@ class LLMRepairTool:
         return "\n".join(parts)
 
     # ============================================================
-    # 3. 完整 RAG：初检 + 重排（label_score=0）
+    # 3. 完整 RAG：初检 + 重排
     # ============================================================
     def _failure_alignment_score(self, previous_failure_analysis, case_doc):
         if not previous_failure_analysis:
@@ -322,7 +322,7 @@ class LLMRepairTool:
             return code
 
     # ============================================================
-    # 6. 测试执行（修改：预处理代码，_extract_assertions 改为静态）
+    # 6. 测试执行
     # ============================================================
     def _normalize_test_case_to_str(self, test_case_raw):
         if test_case_raw is None:
@@ -412,7 +412,6 @@ def check(candidate):
 
     @staticmethod
     def _extract_assertions(test_case):
-        """静态方法：从测试用例字符串中提取所有 assert 表达式"""
         if isinstance(test_case, list):
             test_case = "\n".join(test_case)
         elif not isinstance(test_case, str):
@@ -440,7 +439,6 @@ def check(candidate):
         return list(dict.fromkeys(assertions))
 
     def _run_test_case_in_process(self, repaired_code, test_case, timeout=60):
-        # 在父进程中预处理代码：移除顶层调用
         cleaned_code = self._remove_immediate_calls(repaired_code)
 
         def worker(code, test, result_queue):
