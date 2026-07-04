@@ -62,7 +62,6 @@ class SimpleLLMRepairTool:
             code = "\n".join(code.split("\n")[1:])
         return code.strip()
 
-    # ---------- 辅助方法：移除顶层函数调用 ----------
     def _remove_immediate_calls(self, code: str) -> str:
         """移除代码顶层中的独立函数调用（如 solve()、main() 等）"""
         try:
@@ -81,7 +80,6 @@ class SimpleLLMRepairTool:
 
     # ---------- 测试执行 ----------
     def _normalize_test_case_to_str(self, test_case_raw):
-        """归一化测试用例为可执行字符串（支持多种格式）"""
         if test_case_raw is None:
             return None
         if isinstance(test_case_raw, str):
@@ -170,7 +168,6 @@ def check(candidate):
 
     @staticmethod
     def _extract_assertions(test_case):
-        """静态方法：从测试用例字符串中提取所有 assert 表达式"""
         if isinstance(test_case, list):
             test_case = "\n".join(test_case)
         elif not isinstance(test_case, str):
@@ -196,8 +193,6 @@ def check(candidate):
         return list(dict.fromkeys(assertions))
 
     def _run_test_case_in_process(self, repaired_code, test_case, timeout=60):
-        """在子进程中执行测试，返回 (success, message, failed_assertions)"""
-        # 在父进程中预处理代码：移除顶层调用（避免子进程中调用实例方法）
         cleaned_code = self._remove_immediate_calls(repaired_code)
 
         def worker(code, test, result_queue):
@@ -208,7 +203,6 @@ def check(candidate):
 
                 check_fn = local_env.get("check", None)
                 if callable(check_fn):
-                    # 尝试从测试代码中解析被测试的函数名
                     function_name = None
                     try:
                         test_tree = ast.parse(test)
@@ -275,7 +269,6 @@ def check(candidate):
                     result_queue.put(("success", ok_msg, []))
                     return
 
-                # 没有 check 函数，使用普通 assert 语句
                 assertions = SimpleLLMRepairTool._extract_assertions(test)
                 if not assertions:
                     result_queue.put(("no_assertions", "测试用例中没有找到 assert，且未定义 check 函数", []))
@@ -371,7 +364,6 @@ def check(candidate):
             except TimeoutError:
                 return False, f"验证阶段超时（{timeout}秒）", {}
 
-    # ---------- 为了保持原 repair_one 接口兼容，将 judge_success 映射到 judge_repair_success_with_timeout ----------
     def judge_success(self, sample, repaired_code):
         """兼容旧接口，返回 (bool, str)"""
         success, reason, _ = self.judge_repair_success_with_timeout(sample, repaired_code, timeout=60)
