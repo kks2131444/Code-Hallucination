@@ -132,9 +132,7 @@ class SimpleLLMRepairTool:
             code = "\n".join(code.split("\n")[1:])
         return code.strip()
 
-    # ---------- 辅助方法：移除顶层函数调用 ----------
     def _remove_immediate_calls(self, code: str) -> str:
-        """移除代码顶层中的独立函数调用（如 solve()、main() 等）"""
         try:
             tree = ast.parse(code)
             new_body = []
@@ -149,9 +147,8 @@ class SimpleLLMRepairTool:
         except Exception:
             return code
 
-    # ---------- 测试执行（与原始完整版本一致，但已修复 multiprocessing 问题） ----------
+    # ---------- 测试执行 ----------
     def _normalize_test_case_to_str(self, test_case_raw):
-        """归一化测试用例为可执行字符串（支持多种格式）"""
         if test_case_raw is None:
             return None
         if isinstance(test_case_raw, str):
@@ -235,7 +232,6 @@ def check(candidate):
 
     @staticmethod
     def _extract_assertions(test_case):
-        """静态方法：提取测试用例中的断言表达式"""
         if isinstance(test_case, list):
             test_case = "\n".join(test_case)
         elif not isinstance(test_case, str):
@@ -261,7 +257,6 @@ def check(candidate):
         return list(dict.fromkeys(assertions))
 
     def _run_test_case_in_process(self, repaired_code, test_case, timeout=60):
-        # 在父进程中预处理代码：移除顶层调用（避免子进程中调用实例方法）
         cleaned_code = self._remove_immediate_calls(repaired_code)
 
         def worker(code, test, result_queue):
@@ -303,7 +298,6 @@ def check(candidate):
 
                     candidate_func = local_env[function_name]
                     try:
-                        # 注意：这里调用的是静态方法
                         num_assertions = len(SimpleLLMRepairTool._extract_assertions(test))
                     except Exception:
                         num_assertions = None
@@ -339,7 +333,6 @@ def check(candidate):
                     result_queue.put(("success", ok_msg, []))
                     return
 
-                # 没有 check 函数时，提取普通 assert
                 assertions = SimpleLLMRepairTool._extract_assertions(test)
                 if not assertions:
                     result_queue.put(("no_assertions", "测试用例中没有找到 assert，且未定义 check 函数", []))
@@ -434,11 +427,10 @@ def check(candidate):
                 return False, f"验证阶段超时（{timeout}秒）", {}
 
     def judge_success(self, sample, repaired_code):
-        """兼容旧接口，返回 (bool, str)"""
         success, reason, _ = self.judge_repair_success_with_timeout(sample, repaired_code, timeout=60)
         return success, reason
 
-    # ---------- 生成修复 Prompt（核心修改：注入幻觉定义，允许 input()） ----------
+    # ---------- 生成修复 Prompt ----------
     def generate_prompt(self, sample):
         question = sample.get("question", "").strip()
         code = sample.get("original_code", "")
@@ -586,7 +578,7 @@ def main():
     config = {
         "input": "",
         "output_dir": "",  # 修复结果将保存在此目录
-        "model_name": "Claude-HaiKu-4.5",     
+        "model_name": "",     
         "api_key": "",                # 每次运行前请填写有效密钥
         "api_base": "",
         "temperature": 0.3,
