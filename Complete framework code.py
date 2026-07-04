@@ -87,7 +87,6 @@ hallucination_definitions = {
     full_label_names[15]: "The output is not executable code but rather natural-language prose, comments, placeholder text, or another unintended format, contradicting the code-generation objective."
 }
 
-# ===================== 数据集（用于加载修复案例） =====================
 class LLMRepairTool:
     def __init__(self, llm_config, sample_raw_samples, max_rounds=10):
         self.api_key = llm_config["api_key"]
@@ -180,12 +179,10 @@ class LLMRepairTool:
             if not isinstance(label_ids, list) or not label_ids:
                 continue
 
-            # 删掉 0，但不要整条丢弃
             label_ids = [i for i in label_ids if i != 0]
             if not label_ids:
                 continue
 
-            # 写回，保证后续一致
             sample["label_ids"] = label_ids
 
             doc = self._build_case_document(sample)
@@ -336,7 +333,6 @@ class LLMRepairTool:
 
         return self._rerank_cases(retrieved_docs, sample, previous_failure_analysis, top_k=top_k)
 
-    # 兼容旧打印逻辑
     def _get_relevant_cases_bm25(self, query_text, top_k=3):
         if not self.bm25_index:
             return []
@@ -428,7 +424,7 @@ class LLMRepairTool:
             return code
 
     # ============================================================
-    # 5. 测试执行（修改：预处理代码，_extract_assertions 改为静态）
+    # 5. 测试执行
     # ============================================================
     def _normalize_test_case_to_str(self, test_case_raw):
         if test_case_raw is None:
@@ -518,7 +514,6 @@ def check(candidate):
 
     @staticmethod
     def _extract_assertions(test_case):
-        """静态方法：从测试用例字符串中提取所有 assert 表达式"""
         if isinstance(test_case, list):
             test_case = "\n".join(test_case)
         elif not isinstance(test_case, str):
@@ -546,7 +541,6 @@ def check(candidate):
         return list(dict.fromkeys(assertions))
 
     def _run_test_case_in_process(self, repaired_code, test_case, timeout=60):
-        # 在父进程中预处理代码：移除顶层调用
         cleaned_code = self._remove_immediate_calls(repaired_code)
 
         def worker(code, test, result_queue):
@@ -845,7 +839,7 @@ JSON格式：
         return analysis_result
 
     # ============================================================
-    # 7. Prompt：完整 RAG 注入（允许 input()，禁止顶层调用）
+    # 7. Prompt：完整 RAG 注入
     # ============================================================
     def _format_retrieved_cases_for_prompt(self, reranked_cases):
         if not reranked_cases:
@@ -1351,7 +1345,6 @@ def normalize_predicted_labels_for_query(samples, label2id, full_label_names):
 
 # ===================== 主函数 =====================
 def main():
-    # 硬编码配置（适配阿里云千问API）
     config = {
         "input": "",
         "output_dir": "",  # 修复结果将保存在此目录
