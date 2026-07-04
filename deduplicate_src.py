@@ -4,8 +4,8 @@
 import json
 
 # ========== 配置文件路径 ==========
-INPUT_FILE = "/root/CodeBERT-master123/CodeBERT/newworld/label1_result.json"   # 修改为你的文件路径
-OUTPUT_FILE = "/root/CodeBERT-master123/CodeBERT/last/deduplicated_by_src.json"
+INPUT_FILE = ""   # 修改为你的文件路径
+OUTPUT_FILE = ""
 FIELD = "src"   # 去重依据的字段名
 # =================================
 
