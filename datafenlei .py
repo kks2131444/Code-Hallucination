@@ -104,7 +104,7 @@ class MultiLabelClassificationModel(nn.Module):
 
 # ===================== 数据集划分与Dataset类 =====================
 def split_with_minority_support(all_samples, test_size=0.5, seed=42):
-    """带少数类支持的分割（与文档4完全一致）"""
+    """带少数类支持的分割"""
     label_to_indices = defaultdict(list)
     for idx, (_, label_vec) in enumerate(all_samples):
         for label_id, val in enumerate(label_vec):
