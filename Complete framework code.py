@@ -103,7 +103,6 @@ class LLMRepairTool:
 
         self.all_case_samples = sample_raw_samples
 
-        # 兼容旧接口，虽然现在基本不用
         self.classifier_model = None
         self.classifier_tokenizer = None
         self.adaptive_thresholds = None
