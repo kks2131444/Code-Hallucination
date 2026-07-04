@@ -85,7 +85,7 @@ hallucination_definitions = {
     full_label_names[15]: "The output is not executable code but rather natural-language prose, comments, placeholder text, or another unintended format, contradicting the code-generation objective."
 }
 
-# ===================== 修复工具类（无案例依赖） =====================
+# ===================== 修复工具类=====================
 class LLMRepairTool:
     def __init__(self, llm_config, max_rounds=10):
         self.api_key = llm_config["api_key"]
@@ -583,7 +583,7 @@ JSON格式：
         return analysis_result
 
     # ============================================================
-    # Prompt 生成（无案例注入，允许 input()，禁止顶层调用）
+    # Prompt 生成
     # ============================================================
     def _generate_failure_guidance(self, failure_analysis, round_num):
         if failure_analysis.get("category") == "initial":
